@@ -15,15 +15,15 @@
 #define MESSAGE_MAX_LEN 256
 
 // Please input the SSID and password of WiFi
-const char* ssid     = "Leo";
-const char* password = "P@wsyCh1ps";
+const char* ssid     = "";
+const char* password = "";
 
 /*String containing Hostname, Device Id & Device Key in the format:                         */
 /*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"                */
 /*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessSignature=<device_sas_token>"    */
-static const char* connectionString = "HostName=flw-rd-trevor.azure-devices.net;DeviceId=TrevorTestDevice;SharedAccessKey=GppZIVwdgUL3CfHozNfWC481sKvbf7guhN0GjaQ7UcY=";
+static const char* connectionString = "";
 
-const char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"Temperature\":%f, \"Humidity\":%f}";
+const char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"Temperature\":%f, \"Humidity\":%f, \"Altitude\":%f}";
 
 int messageCount = 1;
 static bool hasWifi = false;
@@ -151,7 +151,8 @@ void loop()
       char messagePayload[MESSAGE_MAX_LEN];
       float temperature = bme280.readTempF();
       float humidity = bme280.readFloatHumidity();
-      snprintf(messagePayload,MESSAGE_MAX_LEN, messageData, DEVICE_ID, messageCount++, temperature,humidity);
+      float altitude = bme280.readFloatAltitudeFeet();
+      snprintf(messagePayload,MESSAGE_MAX_LEN, messageData, DEVICE_ID, messageCount++, temperature,humidity,altitude);
       Serial.println(messagePayload);
       Serial.println("This is the message above");
       EVENT_INSTANCE* message = Esp32MQTTClient_Event_Generate(messagePayload, MESSAGE);
