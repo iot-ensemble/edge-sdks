@@ -1,3 +1,5 @@
+#include <inttypes.h>
+#include <stdio.h>
 #include <SparkFunCCS811.h>
 
 #include <SparkFunBME280.h>
@@ -13,6 +15,7 @@
 #define INTERVAL 10000
 #define DEVICE_ID "TrevorTest"
 #define MESSAGE_MAX_LEN 256
+#define PRIu16 "hu"
 
 // Please input the SSID and password of WiFi
 const char* ssid     = "";
@@ -23,13 +26,12 @@ const char* password = "";
 /*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessSignature=<device_sas_token>"    */
 static const char* connectionString = "";
 
-const char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"Temperature\":%f, \"Humidity\":%f, \"Altitude\":%f}";
+const char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"Temperature\":%f, \"Humidity\":%f, \"Altitude\":%f, , \"CO2 (ppm)\":%u}";
 
 int messageCount = 1;
 static bool hasWifi = false;
 static bool messageSending = true;
 static uint64_t send_interval_ms;
-
 BME280 bme280;
 CCS811 ccs811(CCS811_ADDR);
 
@@ -147,14 +149,16 @@ void loop()
     if (messageSending && 
         (int)(millis() - send_interval_ms) >= INTERVAL)
     {
+      ccs811.readAlgorithmResults();
+
       // Send teperature data
       char messagePayload[MESSAGE_MAX_LEN];
       float temperature = bme280.readTempF();
       float humidity = bme280.readFloatHumidity();
       float altitude = bme280.readFloatAltitudeFeet();
-      snprintf(messagePayload,MESSAGE_MAX_LEN, messageData, DEVICE_ID, messageCount++, temperature,humidity,altitude);
+      uint16_t co2 = ccs811.getCO2();
+      snprintf(messagePayload,MESSAGE_MAX_LEN, messageData, DEVICE_ID, messageCount++, temperature,humidity,altitude,co2);
       Serial.println(messagePayload);
-      Serial.println("This is the message above");
       EVENT_INSTANCE* message = Esp32MQTTClient_Event_Generate(messagePayload, MESSAGE);
       
       
